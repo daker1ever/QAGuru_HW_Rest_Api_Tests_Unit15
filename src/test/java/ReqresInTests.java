@@ -18,7 +18,7 @@ import static specs.CreateUserSpec.createUserResponseSpec;
 import static specs.RegisterUserSpec.registerUserRequestSpec;
 import static specs.RegisterUserSpec.registerUserResponseSpec;
 
-public class ReqresInTests extends TestBase{
+public class ReqresInTests extends TestBase {
 
     @Test
     void getListUsersTest() {
@@ -53,44 +53,52 @@ public class ReqresInTests extends TestBase{
     }
 
     @Test
-    @Tags({@Tag("WithLombok"),@Tag("CreateUser")})
+    @Tags({@Tag("WithLombok"), @Tag("CreateUser")})
     void postCreateTest() {
         CreateUserBodyModel createUserBodyModel = new CreateUserBodyModel();
         createUserBodyModel.setName("morpheus");
         createUserBodyModel.setJob("leader");
 
         CreateUserResponseModel createUserResponseModel = step("Отправление запроса на создание пользователя", () ->
-            given(createUserRequestSpec)
-                    .body(createUserBodyModel)
+                given(createUserRequestSpec)
+                        .body(createUserBodyModel)
 
-                    .when()
-                    .post()
+                        .when()
+                        .post()
 
-                    .then()
-                    .spec(createUserResponseSpec)
-                    .extract().as(CreateUserResponseModel.class)
+                        .then()
+                        .spec(createUserResponseSpec)
+                        .extract().as(CreateUserResponseModel.class)
         );
-        Assertions.assertNotNull(createUserResponseModel.getId());
+        step("Проверка присвоения ID пользователю", () ->
+                Assertions.assertNotNull(createUserResponseModel.getId()));
+
     }
+
     @Test
-    @Tags({@Tag("WithLombok"),@Tag("RegisterUser")})
+    @Tags({@Tag("WithLombok"), @Tag("RegisterUser")})
     void postRegisterSuccessfulTest() {
         RegisterUserBodyModel registerUserBodyModel = new RegisterUserBodyModel();
         registerUserBodyModel.setEmail("eve.holt@reqres.in");
         registerUserBodyModel.setPassword("pistol");
         RegisterUserResponseModel registerUserResponseModel = step("Отправление запроса на регистрацию пользователя", () ->
-        given(registerUserRequestSpec)
-                .body(registerUserBodyModel)
+                given(registerUserRequestSpec)
+                        .body(registerUserBodyModel)
 
-                .when()
-                .post()
+                        .when()
+                        .post()
 
-                .then()
-                .spec(registerUserResponseSpec)
-                .extract().as(RegisterUserResponseModel.class));
-        Assertions.assertEquals(4, registerUserResponseModel.getId());
-        Assertions.assertEquals("QpwL5tke4Pnpja7X4", registerUserResponseModel.getToken());
+                        .then()
+                        .spec(registerUserResponseSpec)
+                        .extract().as(RegisterUserResponseModel.class));
+        step("Проверка полученного ID и токена пользователя", () -> {
+            Assertions.assertEquals(4, registerUserResponseModel.getId());
+            Assertions.assertEquals("QpwL5tke4Pnpja7X4", registerUserResponseModel.getToken());
+        });
+
+
     }
+
     @Test
     void getDelayedResponseTest() {
 

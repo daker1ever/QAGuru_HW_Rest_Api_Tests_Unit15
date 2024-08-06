@@ -1,19 +1,31 @@
 
 
 import io.restassured.http.ContentType;
+import models.CreateUserBodyModel;
+import models.CreateUserResponseModel;
+import models.RegisterUserBodyModel;
+import models.RegisterUserResponseModel;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+import static specs.CreateUserSpec.createUserRequestSpec;
+import static specs.CreateUserSpec.createUserResponseSpec;
+import static specs.RegisterUserSpec.registerUserRequestSpec;
+import static specs.RegisterUserSpec.registerUserResponseSpec;
 
-public class ReqresInTests {
+public class ReqresInTests extends TestBase{
 
     @Test
     void getListUsersTest() {
         given()
 
                 .when()
-                .get("https://reqres.in/api/users?page=2")
+                .get("/api/users?page=2")
 
                 .then()
                 .log().body()
@@ -29,7 +41,7 @@ public class ReqresInTests {
         given()
 
                 .when()
-                .get("https://reqres.in/api/users/2")
+                .get("/api/users/2")
 
                 .then()
                 .log().body()
@@ -41,37 +53,43 @@ public class ReqresInTests {
     }
 
     @Test
+    @Tags({@Tag("WithLombok"),@Tag("CreateUser")})
     void postCreateTest() {
-        given()
-                .body("{\"name\": \"morpheus\", \"job\": \"leader\"\n}")
-                .contentType(ContentType.JSON)
+        CreateUserBodyModel createUserBodyModel = new CreateUserBodyModel();
+        createUserBodyModel.setName("morpheus");
+        createUserBodyModel.setJob("leader");
 
-                .when()
-                .post("https://reqres.in/api/users")
+        CreateUserResponseModel createUserResponseModel = step("Отправление запроса на создание пользователя", () ->
+            given(createUserRequestSpec)
+                    .body(createUserBodyModel)
 
-                .then()
-                .log().body()
-                .log().status()
-                .statusCode(201);
+                    .when()
+                    .post()
+
+                    .then()
+                    .spec(createUserResponseSpec)
+                    .extract().as(CreateUserResponseModel.class)
+        );
+        Assertions.assertNotNull(createUserResponseModel.getId());
     }
     @Test
+    @Tags({@Tag("WithLombok"),@Tag("RegisterUser")})
     void postRegisterSuccessfulTest() {
-        given()
-                .body("{\n" +
-                        "    \"email\": \"eve.holt@reqres.in\",\n" +
-                        "    \"password\": \"pistol\"\n" +
-                        "}")
-                .contentType(ContentType.JSON)
+        RegisterUserBodyModel registerUserBodyModel = new RegisterUserBodyModel();
+        registerUserBodyModel.setEmail("eve.holt@reqres.in");
+        registerUserBodyModel.setPassword("pistol");
+        RegisterUserResponseModel registerUserResponseModel = step("Отправление запроса на регистрацию пользователя", () ->
+        given(registerUserRequestSpec)
+                .body(registerUserBodyModel)
 
                 .when()
-                .post("https://reqres.in/api/register")
+                .post()
 
                 .then()
-                .log().body()
-                .log().status()
-                .body("id", is(4))
-                .body("token", is("QpwL5tke4Pnpja7X4"))
-                .statusCode(200);
+                .spec(registerUserResponseSpec)
+                .extract().as(RegisterUserResponseModel.class));
+        Assertions.assertEquals(4, registerUserResponseModel.getId());
+        Assertions.assertEquals("QpwL5tke4Pnpja7X4", registerUserResponseModel.getToken());
     }
     @Test
     void getDelayedResponseTest() {
@@ -79,7 +97,7 @@ public class ReqresInTests {
         given()
                 .when()
                 .contentType(ContentType.JSON)
-                .get("https://reqres.in/api/users?delay=3")
+                .get("/api/users?delay=3")
 
                 .then()
                 .log().body()
